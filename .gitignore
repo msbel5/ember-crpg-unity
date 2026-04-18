@@ -28,3 +28,9 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Prototype art — 1.5GB of generated/third-party imagery from the
+# ember-rpg scaffold. Kept on disk but out of git until real Ember
+# art lands. Re-include selectively.
+Assets/Art/Prototype/
+Assets/Art/Prototype.meta

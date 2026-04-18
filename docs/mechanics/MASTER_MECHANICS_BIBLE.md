@@ -4,6 +4,18 @@
 **Date:** 2026-04-18
 **Purpose:** Her sistemi, her mekanik, her formulu 4 legendary engine'den cikarip tek referans dokumana toplamak. Unity C# rewrite icin blueprint.
 
+> **Audit status:** See `BIBLE_AUDIT.md` (2026-04-18) for source-verified corrections, confidence scores, and missed mechanics. Sections below marked ⚠️ have been corrected post-audit; sections marked 🔍 have known gaps documented in the audit.
+>
+> **Architectural lock-ins (2026-04-19):** See `ARCHITECTURE.md` for the Actor + Item blueprint, DM query API, and NPC memory design. The following decisions are now committed:
+> - **Real-time with pause** (matches DFU/OpenMW). Turn-based combat is OUT.
+> - **Primary engines: DFU + OpenMW.** GemRB and DF are reference-only for specific subsystems (containers/pathfinding/morale from GemRB; body tissues/materials/syndromes/personality from DF).
+> - **Unified `Actor` + `Item` primitives.** Everything in the world is one of those two. See Architecture Part 1–2.
+> - **Deterministic world.** One seeded `IRng` service; no uncontrolled `UnityEngine.Random` calls.
+> - **LLM "DM" narrator** talks to the engine via typed query/roll APIs (Architecture Part 3). The DM never invents mechanics; it asks, the engine answers, the DM narrates the answer.
+> - **Persistent NPC memory** (Ember extension; neither engine has it). See Architecture §1.4.
+>
+> Sections that conflict with these lock-ins (GemRB D&D 2E paradigm, turn-based combat, dual/multi-class, save-vs-spell categories, DF world-gen) are kept as reference but not implemented in v1.
+
 ---
 
 ## INDEX
@@ -205,11 +217,29 @@ Fighter, Ranger, Paladin, Cleric, Druid, Mage, Sorcerer, Thief, Bard, Monk, Barb
 
 ---
 
-## 7. Level Progression
+## 7. Level Progression ⚠️
 
 ### DFU
 - **Level formula:** floor((CurrentSkillSum - StartingSkillSum + 28) / 15)
 - **Per level:** random(Career.HPPerLevel/2, Career.HPPerLevel) + END modifier + bonus pool of random(4,6) points
+
+### OpenMW/Morrowind — Skill → Attribute Multiplier (MISSING FROM BIBLE V1)
+**Source:** `apps/openmw/mwmechanics/npcstats.cpp:268-280`, `getLevelupAttributeMultiplier()`
+
+This is Morrowind's signature progression mechanic — without it, level-up is just a random stat roll.
+
+```
+On skill increase, increment the governing attribute's skill-up counter.
+On rest/level-up, for each attribute:
+   n = clamp(counter, 1, 10)
+   statGain = iLevelUp01Mult ... iLevelUp10Mult table[n]   // ascending x1..x5
+   (counter reset)
+```
+- Each skill maps to 1 governing attribute (e.g. Long Blade → STR, Athletics → SPD).
+- Leveling 10+ of a skill's governing skills in one level → x5 attribute gain on next level-up.
+- Lazy level-up (e.g. only Sneak going up) → x1 gains, you fall behind.
+
+**Ember recommendation:** port this. It turns skill choice into attribute strategy and makes every pre-rest decision matter.
 
 ### GemRB/BG
 - XP thresholds per class (Fighter: 2000/4000/8000/16000...)
@@ -333,19 +363,27 @@ Leather → Chain → Iron → Steel → Silver → Elven → Dwarven → Mithri
 | Material | Impact Yield (KPa) | Shear Yield (KPa) | Max Edge | Density (kg/m3) |
 |----------|-------------------|-------------------|----------|-----------------|
 | Wood | 10000 | 40000 | 0 | 500 |
-| Copper | 175000 | 99500 | 10000 | 8930 |
+| Copper | 175000 | 50000 | 10000 | 8930 |
 | Iron | 542500 | 155000 | 10000 | 7850 |
 | Steel | 1505000 | 430000 | 10000 | 7850 |
 | Gold | — | — | 0 | 19320 |
 
 ---
 
-## 14. Magic — Spell System
+## 14. Magic — Spell System ⚠️
 
 ### DFU (6 schools, 164 effects)
 **Schools:** Destruction, Restoration, Illusion, Alteration, Thaumaturgy, Mysticism
-**Casting cost:** Magnitude * Duration * Range_multiplier * Effect_cost / 2
-**Max castable:** Cost < Intelligence * 2
+**Casting cost (corrected — `FormulaHelper.cs:2261-2370`):**
+```
+costPerEffect = magnitudeCost(effect, magMin, magMax)
+              + durationCost(effect, duration)
+              + chanceCost(effect, chanceBase, chancePlus)
+totalCost     = Σ(costPerEffect) * targetMultiplier
+targetMultiplier: 1.0 caster-only/touch | 1.5 single-target | 2.0 area-caster | 2.5 area-at-range
+```
+Each effect has its own per-component coefficients — there is no single product formula.
+**Max castable:** Cost <= current Spell Points (no hard INT*2 cap in DFU code — that's a design heuristic for UI, not a validation).
 
 ### GemRB/BG (Vancian magic)
 - Memorize spells per rest
@@ -447,13 +485,29 @@ Start with DFU's 7-body-part system for v1. Add DF-style tissue layers in v2 for
 
 ---
 
-## 21. Movement & Physics
+## 21. Movement & Physics ⚠️
 
 ### DFU
 **States:** Idle, Walking, Running (1.5-2x, costs fatigue), Sneaking (0.5x), Falling, Climbing, Swimming, Jumping
 **Speed:** 1 + (SPD - 50) / 100
 **Fatigue effect:** 50% speed at 0 fatigue
-**Fall damage (OpenMW):** (FallHeight - 100)^2 / 100
+
+**Fall damage (OpenMW, corrected — `character.cpp`):**
+```
+x  = fallHeight - fFallDistanceMin
+x -= 1.5 * Acrobatics + jumpSpellBonus     // acrobatics skill + fortify-jump reduce fall
+x  = max(0, x)
+a  = fFallAcroBase + fFallAcroMult * (100 - Acrobatics)
+x  = fFallDistanceBase + fFallDistanceMult * x
+damage = x * a
+```
+Five game-setting floats tune the curve. Acrobatics skill is load-bearing — a trained jumper takes ~0 damage from heights that kill an untrained one.
+
+**OpenMW fatigueTerm (central primitive — `creaturestats.cpp:39-53`):**
+```
+fatigueTerm = fFatigueBase - fFatigueMult * (1 - current/max)
+```
+This term multiplies hit chance, block chance, melee damage, AND fall damage. If Ember picks OpenMW combat, this is one of the most used numbers in the engine.
 
 ---
 
@@ -521,7 +575,7 @@ Start with DFU's 7-body-part system for v1. Add DF-style tissue layers in v2 for
 - AttackCooldown timer
 - FleeState: None → Idle → RunBlindly/RunToDestination
 - LOS checks per frame
-- AI Settings: Combat(0-100), Flee(0-100), Alarm(0-100), Calm(0-100)
+- AI Settings (`aisetting.hpp`): **Hello(0), Fight(1), Flee(2), Alarm(3)** — each 0-100. No "Calm"; disposition/Hello governs pacification.
 
 ---
 
@@ -611,12 +665,12 @@ Start with DFU's 7-body-part system for v1. Add DF-style tissue layers in v2 for
 
 ---
 
-## 32. Economy — Banking
+## 32. Economy — Banking ⚠️
 
-### DFU
+### DFU (corrected — `FormulaHelper.cs:2023`)
 - Deposit/withdraw gold
-- Loans: borrow with 10% monthly interest
-- Default consequences: bounty, NPC hostility
+- Loans: borrow principal, repay **principal + 10% flat fee** (one-time origination; no monthly compounding in source)
+- Default consequences: bounty + NPC/faction hostility
 - Max loan: reputation * level * multiplier
 
 ---
@@ -651,14 +705,15 @@ Nux Vomica, Arsenic, Moonseed, Drothweed, Somnalius, Pyrrhic Acid, Magebane, Thy
 
 ---
 
-## 36. Syndromes & Curses (DF-style)
+## 36. Syndromes & Curses (DF-style) 🔍
 
 ### DF
 - Interaction system: source → target → effect chain
-- Syndrome effects: ADD_TAG, PHYS_ATT_CHANGE, MATERIAL_FORCE_MULTIPLIER, BP_APPEARANCE_MODIFIER
-- Vampire syndrome: +200 STR/AGI/TOUGH, BLOODSUCKER, NO_AGING, NOT_LIVING, NOEXERT, NOPAIN
+- Syndrome effect tags (all verified in raws): ADD_TAG, PHYS_ATT_CHANGE, MATERIAL_FORCE_MULTIPLIER, BP_APPEARANCE_MODIFIER
+- Tags present on "undead/mythical" creatures in raws: BLOODSUCKER, NO_AGING, NOT_LIVING, NOEXERT, NOPAIN
+- **Ember-picked magnitudes (NOT from DF raws):** vampire +200 STR/AGI/TOUGH stat deltas — shipped DF raws define the TAGS but not an explicit vampire syndrome with these numbers. Treat as Ember design values inspired by the DF pattern.
 - Conditional: requires CAN_LEARN, HAS_BLOOD; forbidden if already cursed
-- Time-based progression: Corprus worsens every 24 hours
+- Time-based progression: DF-pattern (e.g. "worsens every 24 hours") — Ember's Corprus analog must define its own progression curve.
 
 ---
 
@@ -671,12 +726,14 @@ Effects: visibility, XP gain rate, NPC schedules
 
 ---
 
-## 38. Time & Calendar
+## 38. Time & Calendar ⚠️
 
-### DFU
-- 1 real second = 20 game seconds
+### DFU (corrected — `WorldTime.cs:32`, `DaggerfallDateTime.cs:38-40`)
+- **1 real second = 12 game seconds** (TimeScale default = 12f, NOT 20)
 - 24 game hours per day, 30 days per month, 12 months (360 days/year)
 - Seasons affect weather, plant growth, NPC behavior
+
+> **Ember note:** If faster game-time is desired for gameplay reasons, adjust this scalar explicitly — don't cite DFU as the source of a 20x value.
 
 ---
 
