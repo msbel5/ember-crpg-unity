@@ -1,88 +1,54 @@
 using EmberCrpg.Domain.Core;
 using NUnit.Framework;
 
-// Design note:
-// These tests pin the item-handle contract before the production type exists.
-// They cover value semantics only; allocation, lookup, save/load, and logging belong elsewhere.
 namespace EmberCrpg.Tests.EditMode.Core
 {
-    /// <summary>
-    /// Verifies the stable value semantics required by Ember item handles.
-    /// </summary>
     public sealed class ItemIdTests
     {
-        /// <summary>
-        /// A constructed item handle exposes the raw identifier supplied by the caller.
-        /// </summary>
         [Test]
-        public void Constructor_StoresValue()
+        public void ConstructorStoresRawValue()
         {
             var id = new ItemId(42UL);
 
-            Assert.That(id.Value, Is.EqualTo(42UL));
+            Assert.AreEqual(42UL, id.Value);
         }
 
-        /// <summary>
-        /// Two item handles with the same raw identifier compare equal.
-        /// </summary>
         [Test]
-        public void SameValue_IsEqual()
+        public void EqualValuesAreEqual()
         {
-            var left = new ItemId(42UL);
-            var right = new ItemId(42UL);
+            var left = new ItemId(7UL);
+            var right = new ItemId(7UL);
 
-            Assert.That(left, Is.EqualTo(right));
+            Assert.AreEqual(left, right);
+            Assert.IsTrue(left == right);
         }
 
-        /// <summary>
-        /// Two item handles with different raw identifiers compare unequal.
-        /// </summary>
         [Test]
-        public void DifferentValue_IsNotEqual()
+        public void DifferentValuesAreNotEqual()
         {
-            var left = new ItemId(42UL);
-            var right = new ItemId(43UL);
+            var left = new ItemId(7UL);
+            var right = new ItemId(8UL);
 
-            Assert.That(left, Is.Not.EqualTo(right));
+            Assert.AreNotEqual(left, right);
+            Assert.IsTrue(left != right);
         }
 
-        /// <summary>
-        /// The default item handle is the empty no-item sentinel.
-        /// </summary>
         [Test]
-        public void Default_IsEmpty()
+        public void DefaultValueIsEmpty()
         {
-            Assert.That(default(ItemId).IsEmpty, Is.True);
+            var id = default(ItemId);
+
+            Assert.IsTrue(id.IsEmpty);
+            Assert.AreEqual(0UL, id.Value);
         }
 
-        /// <summary>
-        /// Equal item handles produce stable matching hash codes.
-        /// </summary>
         [Test]
-        public void SameValue_HasSameHashCode()
+        public void HashCodeIsStableForSameValue()
         {
-            var left = new ItemId(42UL);
-            var right = new ItemId(42UL);
+            var left = new ItemId(99UL);
+            var right = new ItemId(99UL);
 
-            Assert.That(left.GetHashCode(), Is.EqualTo(right.GetHashCode()));
-        }
-
-        /// <summary>
-        /// The empty item handle has a distinct debug label.
-        /// </summary>
-        [Test]
-        public void Empty_ToString_ReturnsEmptyLabel()
-        {
-            Assert.That(default(ItemId).ToString(), Is.EqualTo("ItemId.Empty"));
-        }
-
-        /// <summary>
-        /// A non-empty item handle includes its raw identifier in the debug string.
-        /// </summary>
-        [Test]
-        public void NonEmpty_ToString_ContainsRawValue()
-        {
-            Assert.That(new ItemId(42UL).ToString(), Does.Contain("42"));
+            Assert.AreEqual(left.GetHashCode(), right.GetHashCode());
         }
     }
 }

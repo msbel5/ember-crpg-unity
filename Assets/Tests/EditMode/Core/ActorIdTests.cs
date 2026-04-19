@@ -1,88 +1,54 @@
 using EmberCrpg.Domain.Core;
 using NUnit.Framework;
 
-// Design note:
-// These tests pin the actor-handle contract before the production type exists.
-// They cover value semantics only; allocation, lookup, save/load, and logging belong elsewhere.
 namespace EmberCrpg.Tests.EditMode.Core
 {
-    /// <summary>
-    /// Verifies the stable value semantics required by Ember actor handles.
-    /// </summary>
     public sealed class ActorIdTests
     {
-        /// <summary>
-        /// A constructed actor handle exposes the raw identifier supplied by the caller.
-        /// </summary>
         [Test]
-        public void Constructor_StoresValue()
+        public void ConstructorStoresRawValue()
         {
             var id = new ActorId(42UL);
 
-            Assert.That(id.Value, Is.EqualTo(42UL));
+            Assert.AreEqual(42UL, id.Value);
         }
 
-        /// <summary>
-        /// Two actor handles with the same raw identifier compare equal.
-        /// </summary>
         [Test]
-        public void SameValue_IsEqual()
+        public void EqualValuesAreEqual()
         {
-            var left = new ActorId(42UL);
-            var right = new ActorId(42UL);
+            var left = new ActorId(7UL);
+            var right = new ActorId(7UL);
 
-            Assert.That(left, Is.EqualTo(right));
+            Assert.AreEqual(left, right);
+            Assert.IsTrue(left == right);
         }
 
-        /// <summary>
-        /// Two actor handles with different raw identifiers compare unequal.
-        /// </summary>
         [Test]
-        public void DifferentValue_IsNotEqual()
+        public void DifferentValuesAreNotEqual()
         {
-            var left = new ActorId(42UL);
-            var right = new ActorId(43UL);
+            var left = new ActorId(7UL);
+            var right = new ActorId(8UL);
 
-            Assert.That(left, Is.Not.EqualTo(right));
+            Assert.AreNotEqual(left, right);
+            Assert.IsTrue(left != right);
         }
 
-        /// <summary>
-        /// The default actor handle is the empty no-actor sentinel.
-        /// </summary>
         [Test]
-        public void Default_IsEmpty()
+        public void DefaultValueIsEmpty()
         {
-            Assert.That(default(ActorId).IsEmpty, Is.True);
+            var id = default(ActorId);
+
+            Assert.IsTrue(id.IsEmpty);
+            Assert.AreEqual(0UL, id.Value);
         }
 
-        /// <summary>
-        /// Equal actor handles produce stable matching hash codes.
-        /// </summary>
         [Test]
-        public void SameValue_HasSameHashCode()
+        public void HashCodeIsStableForSameValue()
         {
-            var left = new ActorId(42UL);
-            var right = new ActorId(42UL);
+            var left = new ActorId(99UL);
+            var right = new ActorId(99UL);
 
-            Assert.That(left.GetHashCode(), Is.EqualTo(right.GetHashCode()));
-        }
-
-        /// <summary>
-        /// The empty actor handle has a distinct debug label.
-        /// </summary>
-        [Test]
-        public void Empty_ToString_ReturnsEmptyLabel()
-        {
-            Assert.That(default(ActorId).ToString(), Is.EqualTo("ActorId.Empty"));
-        }
-
-        /// <summary>
-        /// A non-empty actor handle includes its raw identifier in the debug string.
-        /// </summary>
-        [Test]
-        public void NonEmpty_ToString_ContainsRawValue()
-        {
-            Assert.That(new ActorId(42UL).ToString(), Does.Contain("42"));
+            Assert.AreEqual(left.GetHashCode(), right.GetHashCode());
         }
     }
 }

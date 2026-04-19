@@ -1,8 +1,8 @@
 using System;
 
 // Design note:
-// ItemId is Ember's smallest stable item handle, mirroring DFU's ulong item UID idea
-// without carrying inventory, stack, durability, logging, serialization, or Unity concerns.
+// ItemId is a stable handle for item instances. It is not an ItemDef id and does not
+// describe item data; it only points to a runtime item record.
 namespace EmberCrpg.Domain.Core
 {
     /// <summary>
