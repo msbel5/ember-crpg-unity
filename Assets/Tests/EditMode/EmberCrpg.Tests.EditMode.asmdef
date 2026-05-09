@@ -4,7 +4,8 @@
     "references": [
         "EmberCrpg.Domain",
         "EmberCrpg.Data",
-        "EmberCrpg.Simulation"
+        "EmberCrpg.Simulation",
+        "EmberCrpg.Presentation"
     ],
     "includePlatforms": [
         "Editor"
