@@ -1,6 +1,6 @@
 ﻿// Design note:
 // IRng is Ember's single deterministic randomness contract for Simulation.
-// Systems receive this interface instead of calling UnityEngine.Random, System.Random,
+// Systems receive this interface instead of engine random APIs, System.Random,
 // wall-clock time, frame count, or hidden global state.
 namespace EmberCrpg.Simulation.Rng
 {

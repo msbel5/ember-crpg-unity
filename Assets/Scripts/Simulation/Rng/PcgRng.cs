@@ -2,7 +2,7 @@
 
 // Design note:
 // PcgRng is Ember's concrete deterministic RNG for simulation code.
-// It implements PCG-XSH-RR 64-to-32 and replaces UnityEngine.Random/System.Random in all game rules.
+// It implements PCG-XSH-RR 64-to-32 and replaces non-deterministic random sources in all game rules.
 namespace EmberCrpg.Simulation.Rng
 {
     /// <summary>
@@ -61,7 +61,7 @@ namespace EmberCrpg.Simulation.Rng
                 throw new ArgumentOutOfRangeException(nameof(maxExclusive), "Range bounds must form a positive int-sized span.");
 
             var bound = (uint)span;
-            var threshold = unchecked((uint)(0U - bound)) % bound;
+            var threshold = unchecked((0U - bound)) % bound;
 
             while (true)
             {
