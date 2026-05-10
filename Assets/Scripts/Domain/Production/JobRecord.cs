@@ -177,7 +177,45 @@ namespace EmberCrpg.Domain.Production
                 elapsedTicks,
                 Tags);
         }
+        
+        /// <summary>
+        /// Returns a copy with changed assignee while preserving status.
+        /// </summary>
+        public JobRecord WithAssignee(ActorId assigneeId)
+        {
+            return new JobRecord(
+                Id,
+                Kind,
+                Priority,
+                Status,
+                assigneeId,
+                SkillId,
+                RoomId,
+                ActivitySiteId,
+                InputTags,
+                OutputTags,
+                CompletionTicks,
+                ElapsedTicks,
+                Tags);
+        }
 
+        /// <summary>
+        /// Returns an assigned copy of this queued job.
+        /// </summary>
+        public JobRecord AssignTo(ActorId assigneeId)
+        {
+            if (assigneeId.IsEmpty)
+                throw new ArgumentException("Assigned actor id cannot be empty.", nameof(assigneeId));
+
+            if (Status != JobStatus.Queued)
+                throw new InvalidOperationException("Only queued jobs can be assigned.");
+
+            if (!AssigneeId.IsEmpty)
+                throw new InvalidOperationException("Queued job already has an assignee.");
+
+            return WithAssignee(assigneeId).WithStatus(JobStatus.Assigned);
+        }        
+        
         private static int ValidatePriority(int value)
         {
             if (value < 1 || value > 5)
