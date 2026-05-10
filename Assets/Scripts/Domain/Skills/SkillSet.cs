@@ -28,7 +28,15 @@ namespace EmberCrpg.Domain.Skills
         {
             get { return _records.Count; }
         }
-
+        
+        /// <summary>
+        /// Deterministic read-only skill records in stable collection order.
+        /// </summary>
+        public IReadOnlyList<SkillRecord> Records
+        {
+            get { return _records; }
+        }
+        
         /// <summary>
         /// Creates an actor-local skill collection.
         /// </summary>
