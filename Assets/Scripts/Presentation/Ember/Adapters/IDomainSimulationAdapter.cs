@@ -14,6 +14,7 @@ namespace EmberCrpg.Presentation.Ember.Adapters
     public interface IDomainSimulationAdapter
     {
         void AdvanceTick(int tickIndex);
+        int TickIndex { get; }
 
         string HudText { get; }
 
@@ -21,11 +22,19 @@ namespace EmberCrpg.Presentation.Ember.Adapters
         IReadOnlyList<ColonyNeedsRow> ColonyNeedsRows { get; }
         IReadOnlyList<FactionRow> FactionRows { get; }
         IReadOnlyList<InventorySlot> InventorySlots { get; }
+        IReadOnlyList<string> SpellSlots { get; }
 
         CombatHudState CombatHud { get; }
 
         bool TryReadActor(string actorName, out ActorViewState state);
         bool TryReadWorksite(string siteName, out WorksiteViewState state);
+
+        IDialogSource GetDialogSource(string actorName);
+
+        void LogCombat(string message);
+        void TakePlayerDamage(int amount);
+
+        string ConsultFate();
     }
 
     /// <summary>

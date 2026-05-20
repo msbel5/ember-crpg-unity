@@ -8,25 +8,45 @@ namespace EmberCrpg.Presentation.Ember.Views
     /// each tick. Visual interpolation between two snapshots stays inside the view
     /// so the simulation can advance at its own deterministic rate.
     /// </summary>
+    public interface IDamageSink
+    {
+        void Apply(int amount);
+    }
+
     [DisallowMultipleComponent]
-    public sealed class ActorView : MonoBehaviour
+    public sealed class ActorView : MonoBehaviour, IDamageSink
     {
         [SerializeField] private float _interpolationSpeed = 8f;
         [SerializeField] private Transform _billboard;
 
         private ActorViewState _target;
         private bool _hasTarget;
+        private SpriteRenderer _renderer;
+        private float _tintRemaining;
 
         private void Awake()
         {
             if (_billboard == null)
                 _billboard = transform.Find("Billboard");
+            
+            if (_billboard != null)
+                _renderer = _billboard.GetComponent<SpriteRenderer>();
         }
 
         public void SetTarget(ActorViewState state)
         {
             _target = state;
             _hasTarget = true;
+        }
+
+        public void Apply(int amount)
+        {
+            _tintRemaining = 0.2f;
+            var adapter = EmberCrpg.Presentation.Ember.Adapters.EmberDomainAdapterLocator.Current;
+            if (adapter != null)
+            {
+                adapter.LogCombat($"{gameObject.name} takes {amount} damage!");
+            }
         }
 
         private void Update()
@@ -37,6 +57,19 @@ namespace EmberCrpg.Presentation.Ember.Views
             transform.rotation = Quaternion.Slerp(transform.rotation, _target.WorldRotation, t);
             if (_billboard != null)
                 _billboard.gameObject.SetActive(_target.Visible);
+
+            if (_renderer != null)
+            {
+                if (_tintRemaining > 0)
+                {
+                    _tintRemaining -= Time.deltaTime;
+                    _renderer.color = Color.red;
+                }
+                else
+                {
+                    _renderer.color = Color.white;
+                }
+            }
         }
     }
 

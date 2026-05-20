@@ -48,7 +48,9 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
             var spellBar = EmberUiBuilder.BuildPanel(canvas, "SpellBar",
                 new Vector2(0.18f, 0f), new Vector2(0.82f, 0.12f),
                 new Color(0f, 0f, 0f, 0.55f));
-            EmberUiBuilder.AttachRuntimeScript(spellBar.gameObject, "EmberCrpg.Presentation.Ember.UI.InventoryGrid");
+            EmberUiBuilder.AttachRuntimeScript(spellBar.gameObject, "EmberCrpg.Presentation.Ember.UI.SpellBar");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 12f), "Faz9TavernDialog", "→ Faz 9");
         }
     }
 }

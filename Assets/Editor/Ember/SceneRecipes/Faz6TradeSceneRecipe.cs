@@ -46,11 +46,14 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 new Vector2(0.65f, 0.05f), new Vector2(0.98f, 0.55f),
                 new Color(0f, 0f, 0f, 0.45f));
             EmberUiBuilder.AttachRuntimeScript(inventory.gameObject, "EmberCrpg.Presentation.Ember.UI.InventoryGrid");
+            inventory.gameObject.SetActive(false);
 
             var factions = EmberUiBuilder.BuildPanel(canvas, "FactionPanel",
                 new Vector2(0.02f, 0.05f), new Vector2(0.38f, 0.55f),
                 new Color(0f, 0f, 0f, 0.45f));
             EmberUiBuilder.AttachRuntimeScript(factions.gameObject, "EmberCrpg.Presentation.Ember.UI.FactionPanel");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 10f), "Faz7CombatDungeon", "→ Faz 7");
         }
     }
 }

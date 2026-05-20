@@ -41,3 +41,6 @@ desktop.ini
 # art lands. Re-include selectively.
 Assets/Art/Prototype/
 Assets/Art/Prototype.meta
+
+# Build artifacts (out of repo; produced via Ember/Build menu)
+Builds/

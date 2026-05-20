@@ -33,7 +33,8 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
 
             EmberPlayerRigBuilder.BuildRig(
                 spawnPosition: new Vector3(0f, 0f, -7f),
-                spawnRotation: Quaternion.identity);
+                spawnRotation: Quaternion.identity,
+                fov: 60f);
 
             var enemies = new GameObject("Enemies").transform;
             EmberWorldspaceBuilder.SpawnActor("Goblin_A", "goblin", new Vector3(-2f, 0f, 4f), enemies);
@@ -47,6 +48,8 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 new Vector2(0f, 0f), new Vector2(1f, 0.18f),
                 new Color(0f, 0f, 0f, 0.55f));
             EmberUiBuilder.AttachRuntimeScript(combatHud.gameObject, "EmberCrpg.Presentation.Ember.UI.CombatHud");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 15f), "Faz8RitualHall", "→ Faz 8");
         }
     }
 }
