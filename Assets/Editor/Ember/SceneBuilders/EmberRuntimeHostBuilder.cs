@@ -22,8 +22,27 @@ namespace EmberCrpg.Editor.Ember.SceneBuilders
 
             var host = new GameObject("EmberWorldHost");
             AddRuntimeComponent(host, "EmberCrpg.Presentation.Ember.Bootstrap.EmberWorldHost");
+            AddAmbientAudio(host);
             AssignSpriteRegistry(host);
             return host;
+        }
+
+        private static void AddAmbientAudio(GameObject host)
+        {
+            var type = ResolveRuntimeType("EmberCrpg.Presentation.Ember.Audio.EmberAmbientAudio");
+            if (type == null) return;
+
+            var comp = host.AddComponent(type);
+            var sceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+            bool indoors = sceneName.Contains("Dungeon") || sceneName.Contains("Hall") || sceneName.Contains("Tavern") || sceneName.Contains("Shrine");
+            
+            var serialized = new SerializedObject(comp);
+            var prop = serialized.FindProperty("_type");
+            if (prop != null)
+            {
+                prop.enumValueIndex = indoors ? 1 : 0; // 1 = Indoors, 0 = Outdoors
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
         }
 
         private static void AssignSpriteRegistry(GameObject host)

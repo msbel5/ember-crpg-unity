@@ -71,6 +71,13 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 new Vector2(0.56f, 0f), new Vector2(1f, 0.4f),
                 new Color(0f, 0f, 0f, 0.55f));
             EmberUiBuilder.AttachRuntimeScript(dialog.gameObject, "EmberCrpg.Presentation.Ember.UI.DialogBoxPanel");
-        }
+
+            var spellBar = EmberUiBuilder.BuildPanel(canvas, "SpellBar",
+                new Vector2(0.35f, 0.42f), new Vector2(0.65f, 0.48f),
+                new Color(0f, 0f, 0f, 0.55f));
+            EmberUiBuilder.AttachRuntimeScript(spellBar.gameObject, "EmberCrpg.Presentation.Ember.UI.SpellBar");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 15f), "Faz12TavernFlavour", "→ Faz 12");
+}
     }
 }

@@ -46,6 +46,8 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 new Vector2(0.78f, 0.35f), new Vector2(1f, 0.94f),
                 new Color(0f, 0f, 0f, 0.45f));
             EmberUiBuilder.AttachRuntimeScript(needsPanel.gameObject, "EmberCrpg.Presentation.Ember.UI.ColonyNeedsPanel");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 10f), "Faz5SeasonFarm", "→ Faz 5");
         }
     }
 }

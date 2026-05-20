@@ -49,6 +49,8 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 new Vector2(0.05f, 0.02f), new Vector2(0.95f, 0.32f),
                 new Color(0f, 0f, 0f, 0.75f));
             EmberUiBuilder.AttachRuntimeScript(narration.gameObject, "EmberCrpg.Presentation.Ember.UI.DialogBoxPanel");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 10f), "Faz3SmithingOverworld", "→ Faz 3");
         }
     }
 }

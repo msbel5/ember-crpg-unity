@@ -42,6 +42,21 @@ namespace EmberCrpg.Presentation.Ember.UI
                 if (Input.GetKeyDown(KeyCode.Alpha1 + i))
                     Source.SelectTopic(topics[i]);
             }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Close();
+            }
+        }
+
+        public void Close()
+        {
+            Source = null;
+            gameObject.SetActive(false);
+            
+            // Re-lock cursor
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
         private void RebuildTopicLabels()

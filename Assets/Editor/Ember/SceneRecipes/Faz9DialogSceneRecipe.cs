@@ -50,6 +50,8 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 new Vector2(0.1f, 0.02f), new Vector2(0.9f, 0.45f),
                 new Color(0f, 0f, 0f, 0.7f));
             EmberUiBuilder.AttachRuntimeScript(dialog.gameObject, "EmberCrpg.Presentation.Ember.UI.DialogBoxPanel");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 8f), "Faz10OracleShrine", "→ Faz 10");
         }
     }
 }

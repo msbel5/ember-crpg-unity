@@ -49,6 +49,7 @@ namespace EmberCrpg.Editor.Ember.Menu
         [MenuItem(Root + "All — Build every faz scene")]
         public static void BuildAll()
         {
+            SpriteRegistryAutoBuilder.Build();
             RunRecipe(new Faz3SmithingSceneRecipe());
             RunRecipe(new Faz4ColonyNeedsSceneRecipe());
             RunRecipe(new Faz5FarmSceneRecipe());
@@ -63,7 +64,6 @@ namespace EmberCrpg.Editor.Ember.Menu
 
         public static void RunRecipe(IEmberSceneRecipe recipe)
         {
-            SpriteRegistryAutoBuilder.Build();
             EmberSceneFactory.CreateEmpty();
             recipe.Build();
             EmberRuntimeHostBuilder.EnsureHost();

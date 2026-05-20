@@ -31,7 +31,8 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
 
             EmberPlayerRigBuilder.BuildRig(
                 spawnPosition: new Vector3(0f, 0f, -6f),
-                spawnRotation: Quaternion.identity);
+                spawnRotation: Quaternion.identity,
+                fov: 70f);
 
             var smiths = new GameObject("Smiths").transform;
             EmberWorldspaceBuilder.SpawnActor("Smith_A", "blacksmith", new Vector3(-1.2f, 0f, 0f), smiths);
@@ -49,6 +50,8 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 anchorMin: new Vector2(0f, 0.35f), anchorMax: new Vector2(0.22f, 0.94f),
                 background: new Color(0f, 0f, 0f, 0.45f));
             EmberUiBuilder.AttachRuntimeScript(jobPanel.gameObject, "EmberCrpg.Presentation.Ember.UI.JobQueuePanel");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 12f), "Faz4ColonyNeeds", "→ Faz 4");
         }
     }
 }

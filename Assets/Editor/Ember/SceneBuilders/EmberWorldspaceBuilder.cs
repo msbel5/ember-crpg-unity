@@ -31,6 +31,7 @@ namespace EmberCrpg.Editor.Ember.SceneBuilders
             renderer.sortingOrder = 10;
             AddRuntimeComponent(billboardChild, "EmberCrpg.Presentation.Ember.Views.CameraFacingBillboard");
             AddRuntimeComponent(go, "EmberCrpg.Presentation.Ember.Views.ActorView");
+            AddInteractable(go, actorName);
 
             var capsuleShadow = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             capsuleShadow.name = "ShadowProxy";
@@ -88,6 +89,15 @@ namespace EmberCrpg.Editor.Ember.SceneBuilders
                 if (type != null) return type;
             }
             return null;
+        }
+
+        private static void AddInteractable(GameObject host, string name)
+        {
+            var type = ResolveRuntimeType("EmberCrpg.Presentation.Ember.Interaction.EmberInteractable");
+            if (type == null) return;
+            var interactable = host.AddComponent(type);
+            var setup = type.GetMethod("Setup");
+            if (setup != null) setup.Invoke(interactable, new object[] { name, "General" });
         }
     }
 }

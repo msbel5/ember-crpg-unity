@@ -15,7 +15,8 @@ namespace EmberCrpg.Presentation.Ember.Camera
         [SerializeField] private float _mouseSensitivity = 2.1f;
         [SerializeField] private float _pitchMinDegrees = -85f;
         [SerializeField] private float _pitchMaxDegrees = 85f;
-        [SerializeField] private float _gravity = -18f;
+        [SerializeField] private float _gravity = -20f;
+        [SerializeField] private float _jumpForce = 7f;
 
         private Transform _eye;
         private CharacterController _controller;
@@ -44,7 +45,7 @@ namespace EmberCrpg.Presentation.Ember.Camera
         {
             ApplyLook();
             ApplyMove();
-            if (Input.GetKeyDown(KeyCode.Escape)) ToggleCursor();
+            if (Input.GetKeyDown(KeyCode.F1)) ToggleCursor();
         }
 
         private void ApplyLook()
@@ -68,8 +69,14 @@ namespace EmberCrpg.Presentation.Ember.Camera
                 return;
             }
 
-            if (_controller.isGrounded && _verticalVelocity < 0f)
-                _verticalVelocity = -1f;
+            if (_controller.isGrounded)
+            {
+                if (_verticalVelocity < 0f) _verticalVelocity = -1f;
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    _verticalVelocity = _jumpForce;
+                }
+            }
             _verticalVelocity += _gravity * Time.deltaTime;
 
             var motion = planar * _moveSpeed;
@@ -77,8 +84,14 @@ namespace EmberCrpg.Presentation.Ember.Camera
             _controller.Move(motion * Time.deltaTime);
         }
 
-        private void ToggleCursor()
+        public void SyncYaw(float yaw)
         {
+            _yawDegrees = yaw;
+            transform.rotation = Quaternion.Euler(0f, _yawDegrees, 0f);
+        }
+
+        private void ToggleCursor()
+{
             _captureCursor = !_captureCursor;
             Cursor.lockState = _captureCursor ? CursorLockMode.Locked : CursorLockMode.None;
             Cursor.visible = !_captureCursor;

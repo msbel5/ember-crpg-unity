@@ -46,6 +46,8 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 new Vector2(0.2f, 0.18f), new Vector2(0.8f, 0.5f),
                 new Color(0f, 0f, 0f, 0.7f));
             EmberUiBuilder.AttachRuntimeScript(card.gameObject, "EmberCrpg.Presentation.Ember.UI.DialogBoxPanel");
+
+            EmberScenePortalBuilder.BuildPortal(new Vector3(0f, 0f, 10f), "Faz11ShowroomOverview", "→ Faz 11");
         }
     }
 }

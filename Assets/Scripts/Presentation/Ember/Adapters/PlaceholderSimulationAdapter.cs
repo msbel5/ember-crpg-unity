@@ -11,12 +11,13 @@ namespace EmberCrpg.Presentation.Ember.Adapters
     /// <see cref="EmberDomainAdapterLocator.Register"/> once Captain's domain stores
     /// expose an integration adapter.
     /// </summary>
-    public sealed class PlaceholderSimulationAdapter : IDomainSimulationAdapter
+    public sealed class PlaceholderSimulationAdapter : IDomainSimulationAdapter, IDialogSource
     {
         private readonly List<JobQueueRow> _jobRows = new List<JobQueueRow>();
         private readonly List<ColonyNeedsRow> _needsRows = new List<ColonyNeedsRow>();
         private readonly List<FactionRow> _factionRows = new List<FactionRow>();
         private readonly List<InventorySlot> _inventorySlots = new List<InventorySlot>();
+        private readonly List<string> _spellSlots = new List<string> { "fireball", "heal", "shield", "teleport", "drain" };
         private readonly Dictionary<string, ActorViewState> _actorStates = new Dictionary<string, ActorViewState>();
         private readonly Dictionary<string, WorksiteViewState> _worksiteStates = new Dictionary<string, WorksiteViewState>();
 
@@ -24,11 +25,16 @@ namespace EmberCrpg.Presentation.Ember.Adapters
         private CombatHudState _combatHud = new CombatHudState(95, 100, 80, 100, 60, 100, "—");
         private string _hudText = "Tick 0   Day 1   Spring";
 
+        private string _currentDialogLine = "Greetings traveler.";
+        private List<string> _currentTopics = new List<string> { "Jobs", "Factions", "Rumors" };
+
+        public int TickIndex => _tick;
         public string HudText => _hudText;
-        public IReadOnlyList<JobQueueRow> JobQueueRows => _jobRows;
+public IReadOnlyList<JobQueueRow> JobQueueRows => _jobRows;
         public IReadOnlyList<ColonyNeedsRow> ColonyNeedsRows => _needsRows;
         public IReadOnlyList<FactionRow> FactionRows => _factionRows;
         public IReadOnlyList<InventorySlot> InventorySlots => _inventorySlots;
+        public IReadOnlyList<string> SpellSlots => _spellSlots;
         public CombatHudState CombatHud => _combatHud;
 
         public void AdvanceTick(int tickIndex)
@@ -48,8 +54,47 @@ namespace EmberCrpg.Presentation.Ember.Adapters
         public bool TryReadWorksite(string siteName, out WorksiteViewState state) =>
             _worksiteStates.TryGetValue(siteName, out state);
 
-        private void UpdateHud()
+        public IDialogSource GetDialogSource(string actorName)
         {
+            _currentDialogLine = $"Greetings, I am {actorName}. What brings you here?";
+            return this;
+        }
+
+        public string GetCurrentLine() => _currentDialogLine;
+        public IReadOnlyList<string> GetTopics() => _currentTopics;
+        public void SelectTopic(string topicId)
+        {
+            _currentDialogLine = $"You asked about {topicId}. It is a complex matter indeed.";
+        }
+
+        public void LogCombat(string message)
+        {
+            _combatHud = new CombatHudState(
+                _combatHud.Health, _combatHud.HealthMax,
+                _combatHud.Stamina, _combatHud.StaminaMax,
+                _combatHud.Mana, _combatHud.ManaMax,
+                message);
+        }
+
+        public void TakePlayerDamage(int amount)
+        {
+            _combatHud = new CombatHudState(
+                Mathf.Max(0, _combatHud.Health - amount), _combatHud.HealthMax,
+                _combatHud.Stamina, _combatHud.StaminaMax,
+                _combatHud.Mana, _combatHud.ManaMax,
+                $"You take {amount} damage!");
+        }
+
+        public string ConsultFate()
+        {
+            int roll = Random.Range(1, 101);
+            if (roll <= 33) return "SETBACK: The stars align against you. A cold wind blows.";
+            if (roll <= 66) return "NEUTRAL: The path is unclear. The DM watches in silence.";
+            return "FAVOURABLE: Fortune smiles upon your endeavor.";
+        }
+
+        private void UpdateHud()
+{
             var day = 1 + _tick / 240;
             var season = SeasonOf(day);
             var weather = WeatherOf(_tick);
