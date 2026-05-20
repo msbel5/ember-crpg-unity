@@ -7,6 +7,13 @@
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
 
+# Unity AI Toolkit local cache (re-generated per machine)
+Assets/AI Toolkit/Temp/
+Assets/AI Toolkit/Temp.meta
+
+# Local scratch / capture intermediate files
+.tmp/
+
 # IDE/generated project files
 .vs/
 .idea/
