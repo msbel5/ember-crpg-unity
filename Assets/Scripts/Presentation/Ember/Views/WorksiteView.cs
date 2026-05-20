@@ -31,7 +31,7 @@ namespace EmberCrpg.Presentation.Ember.Views
         private void ApplyEmission()
         {
             if (_bodyRenderer == null) return;
-            var mat = _bodyRenderer.sharedMaterial;
+            var mat = _bodyRenderer.material;
             if (mat == null) return;
             var color = _state.IsActive ? _activeEmission : _idleEmission;
             if (mat.HasProperty("_EmissionColor"))

@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEditor;
+using EmberCrpg.Editor.Ember.Tools;
 
 namespace EmberCrpg.Editor.Ember.SceneBuilders
 {
@@ -13,11 +15,38 @@ namespace EmberCrpg.Editor.Ember.SceneBuilders
         {
             var existing = GameObject.Find("EmberWorldHost");
             if (existing != null)
+            {
+                AssignSpriteRegistry(existing);
                 return existing;
+            }
 
             var host = new GameObject("EmberWorldHost");
             AddRuntimeComponent(host, "EmberCrpg.Presentation.Ember.Bootstrap.EmberWorldHost");
+            AssignSpriteRegistry(host);
             return host;
+        }
+
+        private static void AssignSpriteRegistry(GameObject host)
+        {
+            var hostType = ResolveRuntimeType("EmberCrpg.Presentation.Ember.Bootstrap.EmberWorldHost");
+            if (hostType == null)
+                return;
+
+            var component = host.GetComponent(hostType);
+            if (component == null)
+                return;
+
+            var registry = AssetDatabase.LoadAssetAtPath<Object>(SpriteRegistryAutoBuilder.RegistryAssetPath);
+            if (registry == null)
+                return;
+
+            var serialized = new SerializedObject(component);
+            var prop = serialized.FindProperty("_spriteRegistry");
+            if (prop == null)
+                return;
+
+            prop.objectReferenceValue = registry;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void AddRuntimeComponent(GameObject host, string fullName)

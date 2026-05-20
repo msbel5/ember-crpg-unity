@@ -46,7 +46,7 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
             var combatHud = EmberUiBuilder.BuildPanel(canvas, "CombatHud",
                 new Vector2(0f, 0f), new Vector2(1f, 0.18f),
                 new Color(0f, 0f, 0f, 0.55f));
-            EmberUiBuilder.AttachRuntimeScript(combatHud.gameObject, "EmberCrpg.Presentation.Ember.UI.EmberHud");
+            EmberUiBuilder.AttachRuntimeScript(combatHud.gameObject, "EmberCrpg.Presentation.Ember.UI.CombatHud");
         }
     }
 }

@@ -93,10 +93,10 @@ namespace EmberCrpg.Presentation.Ember.Adapters
             _inventorySlots.Add(new InventorySlot("steel_longsword",  1));
             _inventorySlots.Add(new InventorySlot("leather_armor",    1));
             _inventorySlots.Add(new InventorySlot("bread",            6));
-            _inventorySlots.Add(new InventorySlot("water_skin",       2));
+            _inventorySlots.Add(new InventorySlot("waterskin",        2));
             _inventorySlots.Add(new InventorySlot("healing_potion",   3));
             _inventorySlots.Add(new InventorySlot("torch",            5));
-            _inventorySlots.Add(new InventorySlot("oak_shield",       1));
+            _inventorySlots.Add(new InventorySlot("iron_shield",      1));
         }
 
         private void UpdateCombat()

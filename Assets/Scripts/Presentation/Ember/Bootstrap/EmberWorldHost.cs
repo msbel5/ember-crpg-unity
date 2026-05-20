@@ -1,89 +1,151 @@
 using System.Collections.Generic;
+using EmberCrpg.Presentation.Ember.Adapters;
+using EmberCrpg.Presentation.Ember.Sprites;
 using EmberCrpg.Presentation.Ember.Tick;
 using EmberCrpg.Presentation.Ember.UI;
+using EmberCrpg.Presentation.Ember.Views;
 using UnityEngine;
 
 namespace EmberCrpg.Presentation.Ember.Bootstrap
 {
     /// <summary>
-    /// Single MonoBehaviour entrypoint per scene. Owns the tick driver and exposes the
-    /// adapter sources the UI panels read. Replace the placeholder sources with
-    /// simulation-backed implementations once the domain is wired.
+    /// Single MonoBehaviour entrypoint per generated scene. It owns the tick driver,
+    /// resolves the active simulation adapter, and binds every visual panel to DTO-only
+    /// source interfaces.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class EmberWorldHost : MonoBehaviour, EmberTickDriver.ITickListener,
-        IEmberHudSource, IJobQueueSource, IColonyNeedsSource
+        IEmberHudSource, IJobQueueSource, IColonyNeedsSource, IDialogSource,
+        IInventorySource, ISpriteByName, IFactionSource, ICombatHudSource
     {
+        [SerializeField] private SpriteRegistry _spriteRegistry;
+
+        private static readonly IReadOnlyList<string> Topics = new List<string> { "rumors", "work", "trade", "fate" };
+
         private EmberTickDriver _tick;
-        private readonly PlaceholderModel _model = new PlaceholderModel();
+        private IDomainSimulationAdapter _adapter;
+        private ActorView[] _actorViews;
+        private WorksiteView[] _worksiteViews;
+        private string _selectedTopic = "rumors";
 
         private void Awake()
         {
             _tick = GetComponent<EmberTickDriver>() ?? gameObject.AddComponent<EmberTickDriver>();
             _tick.Listener = this;
 
+            _adapter = EmberDomainAdapterLocator.Current ?? CreateFallbackAdapter();
+            EmberDomainAdapterLocator.Register(_adapter);
+            _adapter.AdvanceTick(0);
+
+            _actorViews = Object.FindObjectsByType<ActorView>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            _worksiteViews = Object.FindObjectsByType<WorksiteView>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             BindUiPanels();
+            PushWorldViews();
+        }
+
+        private void OnDestroy()
+        {
+            if (ReferenceEquals(EmberDomainAdapterLocator.Current, _adapter))
+                EmberDomainAdapterLocator.Clear();
         }
 
         private void BindUiPanels()
         {
-            foreach (var hud in UnityEngine.Object.FindObjectsByType<EmberHud>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var hud in Object.FindObjectsByType<EmberHud>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 hud.Source = this;
-            foreach (var q in UnityEngine.Object.FindObjectsByType<JobQueuePanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var q in Object.FindObjectsByType<JobQueuePanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 q.Source = this;
-            foreach (var n in UnityEngine.Object.FindObjectsByType<ColonyNeedsPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var n in Object.FindObjectsByType<ColonyNeedsPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 n.Source = this;
+            foreach (var d in Object.FindObjectsByType<DialogBoxPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                d.Source = this;
+            foreach (var inventory in Object.FindObjectsByType<InventoryGrid>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                inventory.Source = this;
+                inventory.SpriteLookup = this;
+            }
+            foreach (var faction in Object.FindObjectsByType<FactionPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                faction.Source = this;
+            foreach (var combat in Object.FindObjectsByType<CombatHud>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                combat.Source = this;
         }
 
-        public void OnTick(int tickIndex) => _model.Advance(tickIndex);
-
-        public string GetHudText() => _model.GetHudText();
-        public IReadOnlyList<JobQueueRow> GetRows() => _model.GetJobRows();
-        IReadOnlyList<ColonyNeedsRow> IColonyNeedsSource.GetRows() => _model.GetNeedRows();
-
-        /// <summary>
-        /// Visual-only stand-in until a Domain adapter lands. Produces deterministic
-        /// rows so the panels show data while the real simulation is being wired.
-        /// </summary>
-        private sealed class PlaceholderModel
+        public void OnTick(int tickIndex)
         {
-            private int _tick;
-            private readonly List<JobQueueRow> _jobs = new List<JobQueueRow>();
-            private readonly List<ColonyNeedsRow> _needs = new List<ColonyNeedsRow>();
+            _adapter.AdvanceTick(tickIndex);
+            PushWorldViews();
+        }
 
-            public void Advance(int tick)
+        private void PushWorldViews()
+        {
+            for (int i = 0; i < _actorViews.Length; i++)
             {
-                _tick = tick;
-                _jobs.Clear();
-                _jobs.Add(new JobQueueRow("Smith_A", "smith", tick % 8 < 4 ? "active"   : "queued", 0));
-                _jobs.Add(new JobQueueRow("Smith_B", "smith", tick % 8 < 4 ? "queued"   : "active", 1));
-
-                _needs.Clear();
-                _needs.Add(new ColonyNeedsRow("Innkeeper", Clamp(20 + tick),       Clamp(10 + tick / 2), Clamp(8 + tick / 3),  Clamp(78 - tick / 4)));
-                _needs.Add(new ColonyNeedsRow("Beggar",    Clamp(55 + tick * 2),  Clamp(30 + tick),     Clamp(40 + tick / 2), Clamp(42 - tick / 2)));
-                _needs.Add(new ColonyNeedsRow("Guard",     Clamp(15 + tick / 2),  Clamp(20 + tick / 2), Clamp(10 + tick / 3), Clamp(85 - tick / 5)));
+                var actor = _actorViews[i];
+                if (_adapter.TryReadActor(actor.name, out var state))
+                    actor.SetTarget(state);
             }
 
-            public string GetHudText()
+            for (int i = 0; i < _worksiteViews.Length; i++)
             {
-                var day = 1 + _tick / 240;
-                var season = SeasonOf(day);
-                return $"Tick {_tick}   Day {day}   {season}";
+                var worksite = _worksiteViews[i];
+                if (_adapter.TryReadWorksite(worksite.name, out var state))
+                    worksite.SetState(state);
             }
+        }
 
-            public IReadOnlyList<JobQueueRow> GetJobRows()   => _jobs;
-            public IReadOnlyList<ColonyNeedsRow> GetNeedRows() => _needs;
+        public string GetHudText() => _adapter.HudText;
+        IReadOnlyList<JobQueueRow> IJobQueueSource.GetRows() => _adapter.JobQueueRows;
+        IReadOnlyList<ColonyNeedsRow> IColonyNeedsSource.GetRows() => _adapter.ColonyNeedsRows;
+        IReadOnlyList<FactionRow> IFactionSource.GetRows() => _adapter.FactionRows;
+        public IReadOnlyList<InventorySlot> GetSlots() => _adapter.InventorySlots;
+        CombatHudState ICombatHudSource.Read() => _adapter.CombatHud;
+        public Sprite GetSprite(string name) => _spriteRegistry != null ? _spriteRegistry.GetSprite(name) : null;
 
-            private static int Clamp(int v) => Mathf.Clamp(v, 0, 100);
+        public string GetCurrentLine()
+        {
+            switch (_selectedTopic)
+            {
+                case "work": return "The forge queue is moving. Watch the left panel for job state.";
+                case "trade": return "Caravans shift prices as stock moves between settlements.";
+                case "fate": return "The oracle can surface a deterministic world query without mutating state.";
+                default: return "Ask clean questions. The world remembers what matters.";
+            }
+        }
 
-            private static string SeasonOf(int day) =>
-                (((day - 1) / 30) % 4) switch
-                {
-                    0 => "Spring",
-                    1 => "Summer",
-                    2 => "Autumn",
-                    _ => "Winter",
-                };
+        public IReadOnlyList<string> GetTopics() => Topics;
+
+        public void SelectTopic(string topicId)
+        {
+            if (!string.IsNullOrEmpty(topicId))
+                _selectedTopic = topicId;
+        }
+
+        private static IDomainSimulationAdapter CreateFallbackAdapter()
+        {
+            var type = System.Type.GetType(
+                "EmberCrpg.Presentation.Ember.Adapters.PlaceholderSimulationAdapter, EmberCrpg.Presentation");
+            if (type != null && typeof(IDomainSimulationAdapter).IsAssignableFrom(type))
+                return (IDomainSimulationAdapter)System.Activator.CreateInstance(type);
+
+            return new EmptySimulationAdapter();
+        }
+
+        private sealed class EmptySimulationAdapter : IDomainSimulationAdapter
+        {
+            private static readonly IReadOnlyList<JobQueueRow> EmptyJobs = System.Array.Empty<JobQueueRow>();
+            private static readonly IReadOnlyList<ColonyNeedsRow> EmptyNeeds = System.Array.Empty<ColonyNeedsRow>();
+            private static readonly IReadOnlyList<FactionRow> EmptyFactions = System.Array.Empty<FactionRow>();
+            private static readonly IReadOnlyList<InventorySlot> EmptyInventory = System.Array.Empty<InventorySlot>();
+
+            public void AdvanceTick(int tickIndex) { }
+            public string HudText => "Tick 0   Day 1   Spring";
+            public IReadOnlyList<JobQueueRow> JobQueueRows => EmptyJobs;
+            public IReadOnlyList<ColonyNeedsRow> ColonyNeedsRows => EmptyNeeds;
+            public IReadOnlyList<FactionRow> FactionRows => EmptyFactions;
+            public IReadOnlyList<InventorySlot> InventorySlots => EmptyInventory;
+            public CombatHudState CombatHud => new CombatHudState(0, 100, 0, 100, 0, 100, string.Empty);
+            public bool TryReadActor(string actorName, out ActorViewState state) { state = default; return false; }
+            public bool TryReadWorksite(string siteName, out WorksiteViewState state) { state = default; return false; }
         }
     }
 }

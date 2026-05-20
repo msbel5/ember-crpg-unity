@@ -37,9 +37,10 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
             EmberWorldspaceBuilder.SpawnWorksiteMarker("Forge", new Vector3(-2f, 0.75f, 3.5f));
 
             var canvas = EmberUiBuilder.BuildOverlayCanvas("EmberHUD");
-            EmberUiBuilder.BuildPanel(canvas, "TopBar",
+            var topBar = EmberUiBuilder.BuildPanel(canvas, "TopBar",
                 new Vector2(0f, 0.94f), new Vector2(1f, 1f),
                 new Color(0f, 0f, 0f, 0.55f));
+            EmberUiBuilder.AttachRuntimeScript(topBar.gameObject, "EmberCrpg.Presentation.Ember.UI.EmberHud");
 
             var jobPanel = EmberUiBuilder.BuildPanel(canvas, "JobQueuePanel",
                 new Vector2(0f, 0.45f), new Vector2(0.22f, 0.94f),
@@ -50,6 +51,16 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
                 new Vector2(0.78f, 0.45f), new Vector2(1f, 0.94f),
                 new Color(0f, 0f, 0f, 0.45f));
             EmberUiBuilder.AttachRuntimeScript(needsPanel.gameObject, "EmberCrpg.Presentation.Ember.UI.ColonyNeedsPanel");
+
+            var factions = EmberUiBuilder.BuildPanel(canvas, "FactionPanel",
+                new Vector2(0.24f, 0.45f), new Vector2(0.5f, 0.94f),
+                new Color(0f, 0f, 0f, 0.45f));
+            EmberUiBuilder.AttachRuntimeScript(factions.gameObject, "EmberCrpg.Presentation.Ember.UI.FactionPanel");
+
+            var combatHud = EmberUiBuilder.BuildPanel(canvas, "CombatHud",
+                new Vector2(0.52f, 0.45f), new Vector2(0.76f, 0.94f),
+                new Color(0f, 0f, 0f, 0.45f));
+            EmberUiBuilder.AttachRuntimeScript(combatHud.gameObject, "EmberCrpg.Presentation.Ember.UI.CombatHud");
 
             var inventory = EmberUiBuilder.BuildPanel(canvas, "InventoryGrid",
                 new Vector2(0f, 0f), new Vector2(0.55f, 0.4f),

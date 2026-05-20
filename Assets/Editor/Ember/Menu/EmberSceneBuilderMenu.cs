@@ -1,6 +1,7 @@
 using EmberCrpg.Editor.Ember.Common;
 using EmberCrpg.Editor.Ember.SceneBuilders;
 using EmberCrpg.Editor.Ember.SceneRecipes;
+using EmberCrpg.Editor.Ember.Tools;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 
@@ -62,6 +63,7 @@ namespace EmberCrpg.Editor.Ember.Menu
 
         public static void RunRecipe(IEmberSceneRecipe recipe)
         {
+            SpriteRegistryAutoBuilder.Build();
             EmberSceneFactory.CreateEmpty();
             recipe.Build();
             EmberRuntimeHostBuilder.EnsureHost();

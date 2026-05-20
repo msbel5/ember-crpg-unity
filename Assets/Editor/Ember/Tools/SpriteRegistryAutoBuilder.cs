@@ -14,7 +14,7 @@ namespace EmberCrpg.Editor.Ember.Tools
     /// </summary>
     public static class SpriteRegistryAutoBuilder
     {
-        private const string RegistryAssetPath = "Assets/Art/SpriteRegistries/EmberCanonicalRegistry.asset";
+        public const string RegistryAssetPath = "Assets/Art/SpriteRegistries/EmberCanonicalRegistry.asset";
 
         [MenuItem("Ember/Build/Sprite Registry From Art Folders")]
         public static void Build()
