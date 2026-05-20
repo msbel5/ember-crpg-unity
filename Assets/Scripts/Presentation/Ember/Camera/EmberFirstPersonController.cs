@@ -15,15 +15,19 @@ namespace EmberCrpg.Presentation.Ember.Camera
         [SerializeField] private float _mouseSensitivity = 2.1f;
         [SerializeField] private float _pitchMinDegrees = -85f;
         [SerializeField] private float _pitchMaxDegrees = 85f;
+        [SerializeField] private float _gravity = -18f;
 
         private Transform _eye;
+        private CharacterController _controller;
         private float _yawDegrees;
         private float _pitchDegrees;
+        private float _verticalVelocity;
         private bool _captureCursor = true;
 
         private void Awake()
         {
             _eye = transform.Find("EyeCamera");
+            _controller = GetComponent<CharacterController>();
             _yawDegrees = transform.eulerAngles.y;
         }
 
@@ -58,7 +62,19 @@ namespace EmberCrpg.Presentation.Ember.Camera
             var forward = Input.GetAxisRaw("Vertical");
             var right = Input.GetAxisRaw("Horizontal");
             var planar = (transform.forward * forward + transform.right * right).normalized;
-            transform.position += planar * (_moveSpeed * Time.deltaTime);
+            if (_controller == null)
+            {
+                transform.position += planar * (_moveSpeed * Time.deltaTime);
+                return;
+            }
+
+            if (_controller.isGrounded && _verticalVelocity < 0f)
+                _verticalVelocity = -1f;
+            _verticalVelocity += _gravity * Time.deltaTime;
+
+            var motion = planar * _moveSpeed;
+            motion.y = _verticalVelocity;
+            _controller.Move(motion * Time.deltaTime);
         }
 
         private void ToggleCursor()

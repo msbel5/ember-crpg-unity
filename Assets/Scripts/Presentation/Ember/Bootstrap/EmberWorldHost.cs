@@ -27,9 +27,12 @@ namespace EmberCrpg.Presentation.Ember.Bootstrap
 
         private void BindUiPanels()
         {
-            foreach (var hud in FindObjectsOfType<EmberHud>(includeInactive: true))     hud.Source = this;
-            foreach (var q  in FindObjectsOfType<JobQueuePanel>(includeInactive: true)) q.Source = this;
-            foreach (var n  in FindObjectsOfType<ColonyNeedsPanel>(includeInactive: true)) n.Source = this;
+            foreach (var hud in UnityEngine.Object.FindObjectsByType<EmberHud>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                hud.Source = this;
+            foreach (var q in UnityEngine.Object.FindObjectsByType<JobQueuePanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                q.Source = this;
+            foreach (var n in UnityEngine.Object.FindObjectsByType<ColonyNeedsPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                n.Source = this;
         }
 
         public void OnTick(int tickIndex) => _model.Advance(tickIndex);
@@ -74,7 +77,7 @@ namespace EmberCrpg.Presentation.Ember.Bootstrap
             private static int Clamp(int v) => Mathf.Clamp(v, 0, 100);
 
             private static string SeasonOf(int day) =>
-                ((day - 1) / 30) % 4 switch
+                (((day - 1) / 30) % 4) switch
                 {
                     0 => "Spring",
                     1 => "Summer",

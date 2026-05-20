@@ -29,6 +29,8 @@ namespace EmberCrpg.Editor.Ember.SceneBuilders
             var renderer = billboardChild.AddComponent<SpriteRenderer>();
             renderer.sprite = LoadSpriteByName(spriteName);
             renderer.sortingOrder = 10;
+            AddRuntimeComponent(billboardChild, "EmberCrpg.Presentation.Ember.Views.CameraFacingBillboard");
+            AddRuntimeComponent(go, "EmberCrpg.Presentation.Ember.Views.ActorView");
 
             var capsuleShadow = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             capsuleShadow.name = "ShadowProxy";
@@ -51,6 +53,7 @@ namespace EmberCrpg.Editor.Ember.SceneBuilders
             if (parent != null) go.transform.SetParent(parent, worldPositionStays: false);
             go.transform.position = worldPosition;
             go.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+            AddRuntimeComponent(go, "EmberCrpg.Presentation.Ember.Views.WorksiteView");
             return go;
         }
 
@@ -59,6 +62,32 @@ namespace EmberCrpg.Editor.Ember.SceneBuilders
             if (string.IsNullOrEmpty(spriteName)) return null;
             var path = $"{EmberAssetPaths.CharactersDir}/{spriteName}.png";
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        private static void AddRuntimeComponent(GameObject host, string fullName)
+        {
+            var type = ResolveRuntimeType(fullName);
+            if (type == null)
+            {
+                Debug.LogWarning($"Could not resolve runtime component {fullName}");
+                return;
+            }
+
+            host.AddComponent(type);
+        }
+
+        private static System.Type ResolveRuntimeType(string fullName)
+        {
+            var qualified = System.Type.GetType(fullName + ", EmberCrpg.Presentation");
+            if (qualified != null) return qualified;
+
+            var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                var type = assemblies[i].GetType(fullName);
+                if (type != null) return type;
+            }
+            return null;
         }
     }
 }

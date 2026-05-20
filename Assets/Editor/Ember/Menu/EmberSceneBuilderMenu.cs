@@ -34,6 +34,7 @@ namespace EmberCrpg.Editor.Ember.Menu
         {
             EmberSceneFactory.CreateEmpty();
             recipe.Build();
+            EmberRuntimeHostBuilder.EnsureHost();
             var path = EmberSceneSavePolicy.ResolveScenePath(recipe.SceneName);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), path);
             AssetDatabase.Refresh();

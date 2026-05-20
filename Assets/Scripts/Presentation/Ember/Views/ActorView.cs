@@ -17,6 +17,12 @@ namespace EmberCrpg.Presentation.Ember.Views
         private ActorViewState _target;
         private bool _hasTarget;
 
+        private void Awake()
+        {
+            if (_billboard == null)
+                _billboard = transform.Find("Billboard");
+        }
+
         public void SetTarget(ActorViewState state)
         {
             _target = state;

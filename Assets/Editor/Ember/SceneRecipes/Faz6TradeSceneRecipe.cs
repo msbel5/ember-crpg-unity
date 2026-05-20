@@ -38,9 +38,10 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
             EmberWorldspaceBuilder.SpawnWorksiteMarker("Stall",   new Vector3(0f, 0.5f, 3.5f));
 
             var canvas = EmberUiBuilder.BuildOverlayCanvas("EmberHUD");
-            EmberUiBuilder.BuildPanel(canvas, "TopBar",
+            var topBar = EmberUiBuilder.BuildPanel(canvas, "TopBar",
                 new Vector2(0f, 0.94f), new Vector2(1f, 1f),
                 new Color(0f, 0f, 0f, 0.55f));
+            EmberUiBuilder.AttachRuntimeScript(topBar.gameObject, "EmberCrpg.Presentation.Ember.UI.EmberHud");
             var inventory = EmberUiBuilder.BuildPanel(canvas, "InventoryGrid",
                 new Vector2(0.65f, 0.05f), new Vector2(0.98f, 0.55f),
                 new Color(0f, 0f, 0f, 0.45f));

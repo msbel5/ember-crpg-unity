@@ -43,9 +43,10 @@ namespace EmberCrpg.Editor.Ember.SceneRecipes
             EmberWorldspaceBuilder.SpawnWorksiteMarker("HarvestShed", new Vector3(4f, 0.75f, 1f));
 
             var canvas = EmberUiBuilder.BuildOverlayCanvas("EmberHUD");
-            EmberUiBuilder.BuildPanel(canvas, "TopBar",
+            var topBar = EmberUiBuilder.BuildPanel(canvas, "TopBar",
                 new Vector2(0f, 0.94f), new Vector2(1f, 1f),
                 new Color(0f, 0f, 0f, 0.55f));
+            EmberUiBuilder.AttachRuntimeScript(topBar.gameObject, "EmberCrpg.Presentation.Ember.UI.EmberHud");
             var seasonPanel = EmberUiBuilder.BuildPanel(canvas, "SeasonPanel",
                 new Vector2(0.78f, 0.78f), new Vector2(1f, 0.94f),
                 new Color(0f, 0f, 0f, 0.45f));
